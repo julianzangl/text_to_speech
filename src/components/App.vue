@@ -6,11 +6,12 @@
   >
     <md-app-toolbar class="md-primary md-dense">
       <div class="md-toolbar-section-start">
-        <router-link to="/" class="md-title">{{ $t('title') }}</router-link>
-      </div>
-
-      <div class="md-subheading md-toolbar-section-end">
-        <router-link to="/info" class="md-title">Info</router-link>
+        <router-link
+          to="/"
+          class="md-title"
+        >
+          Text to Speech - Speech to Text
+        </router-link>
       </div>
     </md-app-toolbar>
 
