@@ -10,6 +10,7 @@
             v-model="selectedLanguage_one"
             :md-options="language_names"
             class="lang"
+            @change.native="resetText"
           >
             <label>Language</label>
           </md-autocomplete>
@@ -39,6 +40,7 @@
           v-model="selectedLanguage_second"
           :md-options="language_names"
           class="lang"
+          @change.native="resetText"
         >
           <label>Language</label>
         </md-autocomplete>
@@ -67,39 +69,97 @@ export default {
       selectedLanguage_one: "German",
       selectedLanguage_second: "English",
       language_names: [],
+      recognition: null,
     };
   },
 
   mounted() {
-    this.language_names = this.$store.state.languages.map((language) => {
-      return language.name;
-    });
+    let SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = SpeechRecognition ? new SpeechRecognition() : false;
+    recognition.onstart = function() {
+      this.left_text = "Voice is activated, you can speak to microphone";
+    };
+    recognition.onspeechend = function() {
+      this.left_text =
+        "You were quiet for a while so voice recognition turned itself off";
+    };
+    recognition.onerror = function(event) {
+      if (event.error == "no-speech") {
+        this.left_text =
+          "No speech was detected. You may need to adjust your microphone";
+      }
+    };
+    recognition.onresult = function(event) {
+      let current = event.resultIndex;
+      let transcript = event.results[current][0].transcript;
+      this.left_text = transcript;
+    };
   },
 
   methods: {
     record_voice() {
-      console.log("record_voice");
-    },
-    text_to_speech() {
-      if ("speechSynthesis" in window) {
-        let msg = new SpeechSynthesisUtterance();
-        msg.text = this.right_text;
-        msg.lang = this.getLanuguageObject(this.selectedLanguage_second).key;
-        console.log(msg.lang)
-        window.speechSynthesis.speak(msg);
-      } else {
-        alert("Sorry, your browser doesn't support text to speech!");
+      let SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = SpeechRecognition ? new SpeechRecognition() : false;
+    recognition.onstart = function() {
+      console.log("Voice is activated, you can speak to microphone");
+      this.left_text = "Voice is activated, you can speak to microphone";
+    };
+    recognition.onspeechend = function() {
+      console.log(
+        "You were quiet for a while so voice recognition turned itself off"
+      );
+      this.left_text =
+        "You were quiet for a while so voice recognition turned itself off";
+    };
+    recognition.onerror = function(event) {
+      if (event.error == "no-speech") {
+        this.left_text =
+          "No speech was detected. You may need to adjust your microphone";
       }
+    };
+    recognition.onresult = function(event) {
+      let current = event.resultIndex;
+      let transcript = event.results[current][0].transcript;
+      this.left_text = transcript;
+    };
+      recognition.start();
+    },
+
+    text_to_speech() {
+      let spoken_language = this.$store.state.languages.find(
+        (language) => language.name == this.selectedLanguage_second
+      ).key;
+      responsiveVoice.speak(this.right_text, spoken_language);
+    },
+    resetText() {
+      this.right_text = "";
     },
 
     async translate() {
-      const response = await axios.post("https://libretranslate.de/translate", null, {
-        params: {
-          q: this.left_text,
-          source: this.getLanuguageObject(this.selectedLanguage_one).code,
-          target: this.getLanuguageObject(this.selectedLanguage_second).code,
-        },
-      });
+      const response = await axios.post(
+        "https://libretranslate.de/translate",
+        null,
+        {
+          params: {
+            q: this.left_text,
+            source: this.getLanuguageObject(this.selectedLanguage_one).code,
+            target: this.getLanuguageObject(this.selectedLanguage_second).code,
+            format: "text",
+          },
+        }
+      );
+      // const response2 = await axios.post(
+      //   "https://cors.modus-operandi.workers.dev/proxy/?apiurl=https://libretranslate.de/translate?q=" +
+      //     this.left_text +
+      //     "?source=" +
+      //     this.getLanuguageObject(this.selectedLanguage_one).code +
+      //     "?target=" +
+      //     this.getLanuguageObject(this.selectedLanguage_second).code +
+      //     "?format=text"
+      // );
+      // console.log(response2);
       this.right_text = response.data.translatedText;
     },
 
