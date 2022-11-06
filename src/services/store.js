@@ -8,7 +8,7 @@ export default {
       { code: "en", key: "UK English Female", name: "English" },
       { code: "ru", key: "Russian Female", name: "Russian" },
       { code: "de", key: "Deutsch Male", name: "German" },
-      { code: "fr", key: "French", name: "French" },
+      { code: "fr", key: "French Male", name: "French" },
       { code: "es", key: "Spanish Female", name: "Spanish" },
       { code: "it", key: "Italian Male", name: "Italian" },
       { code: "pt", key: "Portuguese Male", name: "Portuguese" },

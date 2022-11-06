@@ -6,14 +6,20 @@
     <div class="fields">
       <div class="field-content">
         <div class="input-mic">
-          <md-autocomplete
-            v-model="selectedLanguage_one"
-            :md-options="language_names"
-            class="lang"
-            @change.native="resetText"
-          >
-            <label>Language</label>
-          </md-autocomplete>
+          <md-field class="lang">
+            <md-select
+              v-model="selectedLanguage_one"
+              placeholder="Select Language"
+            >
+              <md-option
+                v-for="language in language_names"
+                :key="language"
+                :value="language"
+              >
+                {{ language }}
+              </md-option>
+            </md-select>
+          </md-field>
           <md-icon @click.native="record_voice" class="microphone">
             mic
           </md-icon>
@@ -21,9 +27,26 @@
         <md-field class="field">
           <label>Insert text...</label>
           <md-textarea v-model="left_text" />
+          <md-icon
+            v-if="left_text"
+            @click.native="text_to_speech_left"
+            class="speaker"
+          >
+            volume_up
+          </md-icon>
         </md-field>
       </div>
       <div class="translate">
+        <md-button
+          class="translate"
+          md-raised
+          md-theme="primary"
+          @click="switch_languages"
+        >
+          <md-icon>
+            swap_horiz
+          </md-icon>
+        </md-button>
         <md-button
           class="translate"
           md-raised
@@ -36,14 +59,20 @@
         </md-button>
       </div>
       <div class="field-content">
-        <md-autocomplete
-          v-model="selectedLanguage_second"
-          :md-options="language_names"
-          class="lang"
-          @change.native="resetText"
-        >
-          <label>Language</label>
-        </md-autocomplete>
+        <md-field class="lang">
+          <md-select
+            v-model="selectedLanguage_second"
+            placeholder="Select Language"
+          >
+            <md-option
+              v-for="language in language_names"
+              :key="language"
+              :value="language"
+            >
+              {{ language }}
+            </md-option>
+          </md-select>
+        </md-field>
         <md-field class="field">
           <md-textarea v-model="right_text" :disabled="right_text == ''" />
           <md-icon
@@ -55,6 +84,11 @@
           </md-icon>
         </md-field>
       </div>
+    </div>
+    <div>
+      <md-button class="md-raised" @click="load_example">
+        Load example
+      </md-button>
     </div>
   </div>
 </template>
@@ -74,57 +108,47 @@ export default {
   },
 
   mounted() {
-    let SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
-    let recognition = SpeechRecognition ? new SpeechRecognition() : false;
-    recognition.onstart = function() {
-      this.left_text = "Voice is activated, you can speak to microphone";
-    };
-    recognition.onspeechend = function() {
-      this.left_text =
-        "You were quiet for a while so voice recognition turned itself off";
-    };
-    recognition.onerror = function(event) {
-      if (event.error == "no-speech") {
-        this.left_text =
-          "No speech was detected. You may need to adjust your microphone";
-      }
-    };
-    recognition.onresult = function(event) {
-      let current = event.resultIndex;
-      let transcript = event.results[current][0].transcript;
-      this.left_text = transcript;
-    };
+    //save all languages in lanugage_names with mop from store
+    this.$store.state.languages.forEach((language) => {
+      this.language_names.push(language.name);
+    });
   },
 
   methods: {
     record_voice() {
+      let _this = this;
       let SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
-    let recognition = SpeechRecognition ? new SpeechRecognition() : false;
-    recognition.onstart = function() {
-      console.log("Voice is activated, you can speak to microphone");
-      this.left_text = "Voice is activated, you can speak to microphone";
-    };
-    recognition.onspeechend = function() {
-      console.log(
-        "You were quiet for a while so voice recognition turned itself off"
-      );
-      this.left_text =
-        "You were quiet for a while so voice recognition turned itself off";
-    };
-    recognition.onerror = function(event) {
-      if (event.error == "no-speech") {
-        this.left_text =
-          "No speech was detected. You may need to adjust your microphone";
-      }
-    };
-    recognition.onresult = function(event) {
-      let current = event.resultIndex;
-      let transcript = event.results[current][0].transcript;
-      this.left_text = transcript;
-    };
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+      let recognition = SpeechRecognition ? new SpeechRecognition() : false;
+      recognition.onstart = function() {
+        _this.left_text = "Now listening...";
+        console.log("Voice is activated, you can speak to microphone");
+      };
+      recognition.onspeechend = function() {
+        console.log(
+          "You were quiet for a while so voice recognition turned itself off"
+        );
+      };
+      recognition.onerror = function(event) {
+        if (event.error == "no-speech") {
+          _this.left_text =
+            "No speech was detected. You may need to adjust your microphone";
+        }
+      };
+      recognition.onresult = function(event) {
+        let current = event.resultIndex;
+        let transcript = event.results[current][0].transcript;
+        _this.left_text = transcript;
+      };
       recognition.start();
+    },
+
+    switch_languages() {
+      let temp = this.selectedLanguage_one;
+      this.selectedLanguage_one = this.selectedLanguage_second;
+      this.selectedLanguage_second = temp;
+      this.left_text = this.right_text;
+      this.right_text = "";
     },
 
     text_to_speech() {
@@ -133,8 +157,17 @@ export default {
       ).key;
       responsiveVoice.speak(this.right_text, spoken_language);
     },
-    resetText() {
-      this.right_text = "";
+    text_to_speech_left() {
+      let spoken_language = this.$store.state.languages.find(
+        (language) => language.name == this.selectedLanguage_one
+      ).key;
+      responsiveVoice.speak(this.left_text, spoken_language);
+    },
+
+    load_example() {
+      //make long example in german
+      this.left_text =
+        "Guten Tag! Ich bin ein Computerprogramm, das für dich Texte übersetzt. Du kannst mir entweder Text eingeben oder ich höre dir zu. Du kannst auch auf das Mikrofon klicken und mir etwas sagen.";
     },
 
     async translate() {
@@ -144,8 +177,8 @@ export default {
         {
           params: {
             q: this.left_text,
-            source: this.getLanuguageObject(this.selectedLanguage_one).code,
-            target: this.getLanuguageObject(this.selectedLanguage_second).code,
+            source: this.getLanguageObject(this.selectedLanguage_one).code,
+            target: this.getLanguageObject(this.selectedLanguage_second).code,
             format: "text",
           },
         }
@@ -163,7 +196,7 @@ export default {
       this.right_text = response.data.translatedText;
     },
 
-    getLanuguageObject(name) {
+    getLanguageObject(name) {
       return this.$store.state.languages.find((language) => {
         return language.name === name;
       });
@@ -216,6 +249,7 @@ export default {
 
 .translate {
   display: flex;
+  flex-direction: column;
   align-items: center;
 }
 .lang {
