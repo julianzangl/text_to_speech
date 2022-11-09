@@ -6,7 +6,7 @@ export default {
   state: {
     languages: [
       { code: "en", key: "UK English Female", name: "English" },
-      { code: "ru", key: "Russian Female", name: "Russian" },
+      { code: "ru", key: "Russian Male", name: "Russian" },
       { code: "de", key: "Deutsch Male", name: "German" },
       { code: "fr", key: "French Male", name: "French" },
       { code: "es", key: "Spanish Female", name: "Spanish" },

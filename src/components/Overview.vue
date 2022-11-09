@@ -6,10 +6,13 @@
     <div class="fields">
       <div class="field-content">
         <div class="input-mic">
+          <input v-model="selectedLanguageone" type="text" @change="changeLanguageleft">
           <md-field class="lang">
+            <label>From</label>
             <md-select
-              v-model="selectedLanguage_one"
+              v-model="selectedLanguageone"
               placeholder="Select Language"
+              @change="changeLanguageleft"
             >
               <md-option
                 v-for="language in language_names"
@@ -20,17 +23,20 @@
               </md-option>
             </md-select>
           </md-field>
-          <md-icon @click.native="record_voice" class="microphone">
+          <md-icon
+            class="microphone"
+            @click.native="record_voice"
+          >
             mic
           </md-icon>
         </div>
         <md-field class="field">
           <label>Insert text...</label>
-          <md-textarea v-model="left_text" />
+          <md-textarea v-model="left_text" @change="changeLanguageleft"/>
           <md-icon
             v-if="left_text"
-            @click.native="text_to_speech_left"
             class="speaker"
+            @click.native="text_to_speech_left"
           >
             volume_up
           </md-icon>
@@ -74,11 +80,14 @@
           </md-select>
         </md-field>
         <md-field class="field">
-          <md-textarea v-model="right_text" :disabled="right_text == ''" />
+          <md-textarea
+            v-model="right_text"
+            :disabled="right_text == ''"
+          />
           <md-icon
             v-if="right_text"
-            @click.native="text_to_speech"
             class="speaker"
+            @click.native="text_to_speech"
           >
             volume_up
           </md-icon>
@@ -86,7 +95,10 @@
       </div>
     </div>
     <div>
-      <md-button class="md-raised" @click="load_example">
+      <md-button
+        class="md-raised"
+        @click="load_example"
+      >
         Load example
       </md-button>
     </div>
@@ -100,11 +112,25 @@ export default {
     return {
       left_text: "",
       right_text: "",
-      selectedLanguage_one: "German",
+      selectedLanguageone: "German",
       selectedLanguage_second: "English",
       language_names: [],
-      recognition: null,
     };
+  },
+
+  created() {
+    this.$watch('selectedLanguageone', function (newVal, oldVal) {
+      console.log("newVal", newVal);
+    });
+  },
+
+  watch: {
+    selectedLanguageone(newLanguage) {
+      console.log("Language changed to: " + newLanguage);
+    },
+    left_text(newText) {
+      console.log("Text changed to: " + newText);
+    },
   },
 
   mounted() {
@@ -168,6 +194,11 @@ export default {
       //make long example in german
       this.left_text =
         "Guten Tag! Ich bin ein Computerprogramm, das für dich Texte übersetzt. Du kannst mir entweder Text eingeben oder ich höre dir zu. Du kannst auch auf das Mikrofon klicken und mir etwas sagen.";
+    },
+    changeLanguageleft() {
+      console.log("test")
+      this.left_text = "";
+      this.right_text = "";
     },
 
     async translate() {
